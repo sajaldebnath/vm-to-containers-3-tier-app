@@ -40,7 +40,7 @@ The goal is to demonstrate **how to modernize without rewriting the application*
 ---
 
 # Repository Structure
-
+```
 vm-to-containers-3tier-app/
 │
 ├── app/                    # Flask application tier
@@ -48,11 +48,12 @@ vm-to-containers-3tier-app/
 ├── mongo-init/             # MongoDB initialization image + script
 ├── web/                    # NGINX configuration
 ├── k8s/                    # Kubernetes manifests
+├── helm/                   # Helm chart for packaged deployment
 ├── docs/                   # Diagrams, blog content, architecture notes
 ├── docker-compose.yml
 ├── README.md
 └── LICENSE
-
+```
 ---
 
 # Prerequisites
@@ -146,7 +147,30 @@ http://<ingreaa IP>
 | FastAPI API | http://<MINIKUBE-IP>:30000 |
 
 ---
+# Helm Installation
+The application is packaged as a Helm chart for simplified deployment.
 
+## Install
+helm install demo-3tier ./helm/demo-3tier-app \
+  -n demo-3tier-app \
+  --create-namespace
+
+## Install on Minikube
+helm install demo-3tier ./helm/demo-3tier-app \
+  -n demo-3tier-app \
+  --create-namespace \
+  -f ./helm/demo-3tier-app/values-minikube.yaml
+
+Then run
+minikube tunnel
+
+## Upgrade
+helm upgrade demo-3tier ./helm/demo-3tier-app -n demo-3tier-app
+
+## Uninstall 
+helm uninstall demo-3tier -n demo-3tier-app
+
+---
 # Database Initialization
 
 MongoDB is initialized automatically using a Kubernetes Job.
