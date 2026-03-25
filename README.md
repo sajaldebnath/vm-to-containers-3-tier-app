@@ -40,7 +40,7 @@ The goal is to demonstrate **how to modernize without rewriting the application*
 ---
 
 # Repository Structure
-
+```
 vm-to-containers-3tier-app/
 │
 ├── app/                    # Flask application tier
@@ -53,7 +53,7 @@ vm-to-containers-3tier-app/
 ├── docker-compose.yml
 ├── README.md
 └── LICENSE
-
+```
 ---
 
 # Prerequisites
