@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-nginx-config
+  namespace: demo-3tier-app
+data:
+  default.conf: |
+    upstream app_backend {
+        server demo-app:8080;
+    }
+
+    upstream db_api_backend {
+        server db-api:8000;
+    }
+
+    server {
+        listen 80;
+
+        location / {
+            proxy_pass http://app_backend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        location /docs {
+            proxy_pass http://db_api_backend/docs;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        location /redoc {
+            proxy_pass http://db_api_backend/redoc;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        location /openapi.json {
+            proxy_pass http://db_api_backend/openapi.json;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-web
+  namespace: demo-3tier-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-web
+  template:
+    metadata:
+      labels:
+        app: demo-web
+    spec:
+      containers:
+      - name: demo-web
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: default.conf
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: web-nginx-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-web
+  namespace: demo-3tier-app
+spec:
+  selector:
+    app: demo-web
+  ports:
+  - port: 80
+    targetPort: 80

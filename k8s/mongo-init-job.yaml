@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongo-init
+  namespace: demo-3tier-app
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: mongo-init
+        image: vmunix/demo-mongo-init:latest
+        imagePullPolicy: Always
