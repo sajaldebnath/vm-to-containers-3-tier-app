@@ -1,0 +1,16 @@
+1. Check application resources:
+   kubectl get pods -n {{ include "demo-3tier-app.namespace" . }}
+   kubectl get svc -n {{ include "demo-3tier-app.namespace" . }}
+   kubectl get ingress -n {{ include "demo-3tier-app.namespace" . }}
+
+2. If using Minikube, run:
+   minikube tunnel
+
+3. Access the application:
+   Main UI:  http://<INGRESS-IP>/
+   Swagger:  http://<INGRESS-IP>/docs
+   ReDoc:    http://<INGRESS-IP>/redoc
+
+4. Direct service access:
+   Flask app: http://<MINIKUBE-IP>:{{ .Values.app.service.nodePort }}
+   FastAPI:   http://<MINIKUBE-IP>:{{ .Values.dbApi.service.nodePort }}

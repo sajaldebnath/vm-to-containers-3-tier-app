@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-api
+  namespace: {{ include "demo-3tier-app.namespace" . }}
+  labels:
+    {{- include "demo-3tier-app.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.dbApi.replicaCount }}
+  selector:
+    matchLabels:
+      app: db-api
+  template:
+    metadata:
+      labels:
+        app: db-api
+    spec:
+      containers:
+        - name: db-api
+          image: "{{ .Values.dbApi.image.repository }}:{{ .Values.dbApi.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.dbApi.service.targetPort }}
+          env:
+            - name: MONGO_DETAILS
+              value: {{ .Values.dbApi.env.MONGO_DETAILS | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-api
+  namespace: {{ include "demo-3tier-app.namespace" . }}
+  labels:
+    {{- include "demo-3tier-app.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.dbApi.service.type }}
+  selector:
+    app: db-api
+  ports:
+    - port: {{ .Values.dbApi.service.port }}
+      targetPort: {{ .Values.dbApi.service.targetPort }}
+{{- if eq .Values.dbApi.service.type "NodePort" }}
+      nodePort: {{ .Values.dbApi.service.nodePort }}
+{{- end }}

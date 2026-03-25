@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+  namespace: {{ include "demo-3tier-app.namespace" . }}
+  labels:
+    {{- include "demo-3tier-app.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: mongo
+  ports:
+    - port: {{ .Values.mongo.service.port }}
+      targetPort: {{ .Values.mongo.service.targetPort }}

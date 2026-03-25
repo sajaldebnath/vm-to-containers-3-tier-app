@@ -1,0 +1,34 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demo-3tier-ingress
+  namespace: {{ include "demo-3tier-app.namespace" . }}
+  labels:
+    {{- include "demo-3tier-app.labels" . | nindent 4 }}
+  annotations:
+{{- with .Values.ingress.annotations }}
+{{ toYaml . | indent 4 }}
+{{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+{{- range .Values.ingress.hosts }}
+    - {{- if .host }}host: {{ .host | quote }}{{ end }}
+      http:
+        paths:
+{{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: demo-web
+                port:
+                  number: 80
+{{- end }}
+{{- end }}
+{{- if .Values.ingress.tls }}
+  tls:
+{{ toYaml .Values.ingress.tls | nindent 4 }}
+{{- end }}
+{{- end }}

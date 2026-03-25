@@ -1,0 +1,21 @@
+{{- if .Values.mongoInit.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongo-init
+  namespace: {{ include "demo-3tier-app.namespace" . }}
+  labels:
+    {{- include "demo-3tier-app.labels" . | nindent 4 }}
+spec:
+  backoffLimit: {{ .Values.mongoInit.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        app: mongo-init
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mongo-init
+          image: "{{ .Values.mongoInit.image.repository }}:{{ .Values.mongoInit.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+{{- end }}

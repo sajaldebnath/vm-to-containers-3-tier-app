@@ -1,0 +1,21 @@
+global:
+  imagePullPolicy: Always
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations: {}
+
+web:
+  service:
+    type: ClusterIP
+
+app:
+  service:
+    type: NodePort
+    nodePort: 30080
+
+dbApi:
+  service:
+    type: NodePort
+    nodePort: 30000

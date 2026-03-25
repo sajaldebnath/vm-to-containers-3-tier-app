@@ -1,0 +1,82 @@
+nameOverride: ""
+fullnameOverride: ""
+
+namespaceOverride: ""
+
+imagePullSecrets: []
+
+global:
+  imagePullPolicy: Always
+
+app:
+  replicaCount: 1
+  image:
+    repository: vmunix/demo-app
+    tag: latest
+  service:
+    type: NodePort
+    port: 8080
+    targetPort: 8080
+    nodePort: 30080
+  env:
+    DB_API_HOST: db-api
+    DB_API_PORT: "8000"
+
+dbApi:
+  replicaCount: 1
+  image:
+    repository: vmunix/demo-db-api
+    tag: latest
+  service:
+    type: NodePort
+    port: 8000
+    targetPort: 8000
+    nodePort: 30000
+  env:
+    MONGO_DETAILS: mongodb://mongo:27017
+
+mongo:
+  image:
+    repository: mongo
+    tag: "6"
+  service:
+    port: 27017
+    targetPort: 27017
+  persistence:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+
+mongoInit:
+  enabled: true
+  backoffLimit: 3
+  image:
+    repository: vmunix/demo-mongo-init
+    tag: latest
+
+web:
+  replicaCount: 1
+  image:
+    repository: nginx
+    tag: alpine
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: ""
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
