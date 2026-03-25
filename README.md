@@ -1,78 +1,102 @@
 # VM to Containers: Modernizing a 3-Tier Application
-This repository contains my end-to-end modernization of a VM-based 3-tier demo application into a containerized and Kubernetes-deployable platform.
 
-The project preserves the original application architecture while progressively evolving it through Docker, Docker Compose, and Kubernetes.
+This repository contains an end-to-end modernization of a VM-based 3-tier application into a containerized and Kubernetes-ready platform.
 
-It is both a runnable application and a practical reference implementation for engineers learning how to modernize traditional VM-based applications.
+This is not a greenfield application.
 
-## Architecture Overview
+It is a real transformation of an existing system — taking a VM-based architecture and progressively evolving it into a modern, portable, and cloud-native deployment.
+
+This project serves two purposes:
+
+- A **fully runnable application**
+- A **reference implementation for application modernization**
+
+---
+
+# Architecture Overview
 
 | Tier | Technology | Role |
 |------|------------|------|
 | Web Tier | NGINX | Reverse proxy and entry point |
-| Application Tier | Flask | UI and application logic |
-| API Tier | FastAPI | CRUD API layer |
-| Database | MongoDB | Persistent data store |
-
-## Modernization Journey
-
-This project started as a VM-based 3-tier application and was modernized in stages:
-
-1. Understand the original VM-based architecture
-2. Remove infrastructure-specific assumptions
-3. Containerize the application with Docker
-4. Run the stack with Docker Compose
-5. Prepare the application for Kubernetes
-6. Deploy the application on Kubernetes
-
-7. ## Repository Structure
-
-- `app/` — Flask application tier
-- `db/` — FastAPI backend tier and seed data
-- `mongo-init/` — MongoDB bootstrap image and script
-- `web/` — NGINX configuration
-- `k8s/` — Kubernetes manifests
-- `docs/` — diagrams, blog-series markdown, and architecture notes
-
-- ## Prerequisites
-
-### For Docker Compose
-- Docker
-- Docker Compose
-
-### For Kubernetes
-- Kubernetes cluster
-- `kubectl`
-- Docker registry access for custom images
-- Ingress controller
-- Minikube users: `minikube tunnel`
-
-## Run with Docker Compose
-
-Build and start the full stack:
-
-```bash
-docker compose up --build
-
-Access:
-	•	Main UI: http://localhost
-	•	Flask app directly: http://localhost:8080
-	•	FastAPI directly: http://localhost:8000
-
-Note: MongoDB is initialized through the containerized init pattern.
+| Application Tier | Flask | UI and business logic |
+| API Tier | FastAPI | Backend API layer |
+| Database | MongoDB | Persistent datastore |
 
 ---
 
-## 8. Running on Kubernetes
+# Modernization Journey
 
-This should be a clean sequence.
+This project follows a structured transformation path:
 
-```md
-## Run on Kubernetes
+1. Understand the original VM-based architecture  
+2. Remove infrastructure-specific dependencies  
+3. Containerize each component using Docker  
+4. Run the full stack using Docker Compose  
+5. Prepare the application for Kubernetes  
+6. Deploy the application on Kubernetes  
 
-### Build and push images
+The goal is to demonstrate **how to modernize without rewriting the application**.
 
-```bash
+---
+
+# Repository Structure
+
+vm-to-containers-3tier-app/
+│
+├── app/                    # Flask application tier
+├── db/                     # FastAPI backend + seed data
+├── mongo-init/             # MongoDB initialization image + script
+├── web/                    # NGINX configuration
+├── k8s/                    # Kubernetes manifests
+├── docs/                   # Diagrams, blog content, architecture notes
+├── docker-compose.yml
+├── README.md
+└── LICENSE
+
+---
+
+# Prerequisites
+
+## For Docker Compose
+- Docker
+- Docker Compose
+
+## For Kubernetes
+- Kubernetes cluster (Minikube, Kind, or Cloud)
+- `kubectl`
+- Docker Hub / container registry access
+- Ingress Controller (NGINX recommended)
+
+### Minikube Users
+minikube tunnel
+
+---
+
+# Running with Docker Compose
+
+This is the fastest way to run the application locally.
+
+## Start the application
+
+docker compose up –build
+
+## Access the application
+
+| Component | URL |
+|----------|-----|
+| Main UI (NGINX) | http://localhost |
+| Flask App | http://localhost:8080 |
+| FastAPI | http://localhost:8000 |
+| Swagger UI | http://localhost:8000/docs |
+
+---
+
+# Running on Kubernetes
+
+## Step 1 — Build and Push Images
+
+Replace `<dockerhub-user>` with your username.
+
 docker build -t <dockerhub-user>/demo-app:latest ./app
 docker build -t <dockerhub-user>/demo-db-api:latest ./db
 docker build -t <dockerhub-user>/demo-mongo-init:latest ./mongo-init
@@ -81,77 +105,131 @@ docker push <dockerhub-user>/demo-app:latest
 docker push <dockerhub-user>/demo-db-api:latest
 docker push <dockerhub-user>/demo-mongo-init:latest
 
-### Deploy manifests
+---
+
+## Step 2 — Deploy Application
+
 kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/mongo-statefulset.yaml
-kubectl delete job mongo-init -n demo-3tier-app --ignore-not-found
+
+kubectl delete job mongo-init -n demo-3tier-app –ignore-not-found
 kubectl apply -f k8s/mongo-init-job.yaml
+
 kubectl apply -f k8s/db-api-deployment.yaml
 kubectl apply -f k8s/app-deployment.yaml
 kubectl apply -f k8s/web-deployment.yaml
 kubectl apply -f k8s/ingress.yaml
 
-### Minikube only
-minikube tunnel
+---
+
+## Step 3 — Verify Deployment
+
+kubectl get pods -n demo-3tier-app
+kubectl get svc -n demo-3tier-app
+kubectl get ingress -n demo-3tier-app
 
 ---
 
-## 9. Access URLs
+# Accessing the Application
 
-```md
-## Accessing the Application
+## Through Ingress
 
-### Through Ingress
-- Main UI: `http://<INGRESS-IP>`
-- Swagger UI: `http://<INGRESS-IP>/docs`
-- ReDoc: `http://<INGRESS-IP>/redoc`
+http://<ingreaa IP>
 
-### Direct tier access
-- Flask app: `http://<MINIKUBE-IP>:30080`
-- FastAPI API: `http://<MINIKUBE-IP>:30000`
+---
 
-## MongoDB initialization note
+## Direct Access (for testing)
 
-## Database Initialization
+| Service | URL |
+|--------|-----|
+| Flask App | http://<MINIKUBE-IP>:30080 |
+| FastAPI API | http://<MINIKUBE-IP>:30000 |
 
-MongoDB is initialized using a dedicated Kubernetes Job backed by a custom `demo-mongo-init` image.
+---
 
-That image contains:
+# Database Initialization
+
+MongoDB is initialized automatically using a Kubernetes Job.
+
+## Custom Image: `demo-mongo-init`
+
+This image contains:
 - `MOCK_DATA.json`
 - `init-mongo.sh`
 - MongoDB client tools
 
-The initialization process:
-1. waits for MongoDB
-2. imports seed data
-3. creates required indexes
+## What the Job does
 
-## Blog Series
+1. Waits for MongoDB to be ready  
+2. Imports seed data  
+3. Creates indexes  
+
+This replaces the manual steps previously required in the VM-based setup.
+
+---
+
+# Original VM-Based Deployment
+
+It contained the original startup scripts used in the VM deployment.
+
+These scripts:
+
+- injected FQDNs
+- modified configs dynamically
+- handled application startup sequencing
+
+They are preserved for **learning and comparison only**.
+
+---
+
+# Key Learnings
+
+- VM-based applications can be modernized incrementally  
+- Containerization improves portability  
+- Kubernetes replaces manual orchestration  
+- Jobs, ConfigMaps, and Services replace startup scripts  
+- Architecture evolves without requiring a full rewrite  
+
+---
+
+# Blog Series
 
 This repository accompanies the blog series:
 
-- Part 1 — Understanding the Original 3-Tier Architecture
-- Part 2 — Preparing the Application for Containerization
-- Part 3 — Containerizing the Application with Docker
-- Part 4 — Running the Application with Docker Compose
-- Part 5 — Preparing the Application for Kubernetes
-- Part 6 — Deploying the Application on Kubernetes
+**VM to Containers: Modernizing a 3-Tier Application**
+
+- Part 1 — Understanding the Original Architecture  
+- Part 2 — Preparing for Containerization  
+- Part 3 — Containerizing with Docker  
+- Part 4 — Running with Docker Compose  
+- Part 5 — Preparing for Kubernetes  
+- Part 6 — Deploying on Kubernetes  
 
 Read the full series at:
-[https://sajaldebnath.com](https://sajaldebnath.com)
 
-## Future Roadmap
+👉 https://sajaldebnath.com
 
-Possible next steps:
-- Add health checks and probes
-- Introduce Helm packaging
-- Add CI/CD pipeline
-- Add observability
-- Evolve toward a microservices architecture
+---
 
-## License
+# Future Enhancements
+
+- Helm chart packaging  
+- CI/CD pipeline integration  
+- Observability (Prometheus, Grafana)  
+- Horizontal scaling  
+- Microservices refactoring  
+
+---
+
+# License
 
 This project is licensed under the MIT License.
+
+
+
+
+
+
 
 
 
